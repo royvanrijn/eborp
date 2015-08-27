@@ -4,19 +4,19 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 
 @Path("/detection")
-public class DetectionEndpoint {
+public class DetectionEndpoint implements DetectionListener {
     private static final Logger log = LoggerFactory.getLogger(DetectionEndpoint.class);
 
 
@@ -46,6 +46,7 @@ public class DetectionEndpoint {
     }
 
 
+    @Override
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void onDetection(String data) throws IOException {

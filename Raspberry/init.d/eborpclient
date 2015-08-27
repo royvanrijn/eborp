@@ -3,7 +3,7 @@
 
 case "$1" in 
     start)
-        echo "Starting eborpclient”
+        echo "Starting eborpclient"
         /home/pi/setup.sh
         cd /home/pi/
         ./mon.sh | java -jar EborpClient-0.0.1-SNAPSHOT.jar > /dev/null &
