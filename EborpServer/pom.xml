@@ -4,6 +4,7 @@
 	<groupId>nl.royvanrijn.eborp</groupId>
 	<artifactId>EborpServer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+
 	<dependencies>
 
 		<dependency>
@@ -48,7 +49,8 @@
 			<artifactId>mdsj</artifactId>
 			<version>0.2</version>
 			<type>jar</type>
-			<scope>compile</scope>
+			<scope>system</scope>
+			<systemPath>${basedir}/lib/mdsj.jar</systemPath>
 		</dependency>
 
 	</dependencies>
