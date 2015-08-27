@@ -1,5 +1,8 @@
 package nl.royvanrijn.eborp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -7,26 +10,27 @@ import javax.ws.rs.core.MediaType;
 
 @Path("/detection")
 public class DetectionEndpoint {
+    private static final Logger log = LoggerFactory.getLogger(DetectionEndpoint.class);
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void onDetection(String data) {
-        System.out.println("Received: " + data);
-        
+        log.info(data);
+
         /**
          * TODO:
          *
          *  - Parse the JSON into something useful
          *  - Temporary store and matching of the received detections
-         *  - Store the results for future analysis 
+         *  - Store the results for future analysis
          *
          * Data:
-         * 
+         *
          * Step 1: A single detection:
-         * 			{"epoch":1430962085987,"MAC":"2c:54:cf:ea:69:0d","dBm":-89,"ID":e9f5bff0-bf12-45b3-b532-0d4fccced24a}
-         * 			{"epoch":1430962085987,"MAC":"2c:54:cf:ea:69:0d","dBm":-89,"ID":e9f5bff0-bf12-45b3-b532-0d4fccced24a}
-         * 			{"epoch":1430962085987,"MAC":"2c:54:cf:ea:69:0d","dBm":-89,"ID":e9f5bff0-bf12-45b3-b532-0d4fccced24a}
-         * 			{"epoch":1430962085987,"MAC":"2c:54:cf:ea:69:0d","dBm":-89,"ID":e9f5bff0-bf12-45b3-b532-0d4fccced24a}
+         *            {"epoch":1430962085987,"MAC":"2c:54:cf:ea:69:0d","dBm":-89,"ID":e9f5bff0-bf12-45b3-b532-0d4fccced24a}
+         *            {"epoch":1430962085987,"MAC":"2c:54:cf:ea:69:0d","dBm":-89,"ID":e9f5bff0-bf12-45b3-b532-0d4fccced24a}
+         *            {"epoch":1430962085987,"MAC":"2c:54:cf:ea:69:0d","dBm":-89,"ID":e9f5bff0-bf12-45b3-b532-0d4fccced24a}
+         *            {"epoch":1430962085987,"MAC":"2c:54:cf:ea:69:0d","dBm":-89,"ID":e9f5bff0-bf12-45b3-b532-0d4fccced24a}
          * 		Meaning:
          * 	        epoch:  Time of measurement
          * 	        MAC:    The found MAC address

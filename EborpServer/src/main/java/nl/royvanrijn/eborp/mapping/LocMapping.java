@@ -1,6 +1,6 @@
 package nl.royvanrijn.eborp.mapping;
 
-import mdsj.MDSJ;
+//import mdsj.MDSJ;
 
 import java.util.Arrays;
 
@@ -37,10 +37,10 @@ public class LocMapping {
         }
 
         int n=input[0].length;    // number of data objects
-        double[][] output = MDSJ.stressMinimization(input);
+//        double[][] output = MDSJ.stressMinimization(input);
         //double[][] output= MDSJ.classicalScaling(input); // apply MDS
         for(int i=0; i<n; i++) {  // output all coordinates
-            System.out.println(data[i][0] +"\t"+((int)output[0][i])+"\t"+(int)(output[1][i]));
+//            System.out.println(data[i][0] +"\t"+((int)output[0][i])+"\t"+(int)(output[1][i]));
         }
     }
 }
