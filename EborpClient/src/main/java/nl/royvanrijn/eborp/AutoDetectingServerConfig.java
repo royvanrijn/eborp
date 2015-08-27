@@ -32,33 +32,25 @@ public class AutoDetectingServerConfig implements ServerConfig {
 
         System.out.println("Start autodetecting server address");
 
-        try (final DatagramChannel receiveChannel = createReceiveChannel();
-             final DatagramChannel sendChannel = createSendChannel()) {
-
-            ByteBuffer buffer = ByteBuffer.allocate(32);
-            buffer.put("announce-client".getBytes(Charset.forName("UTF-8")));
-            buffer.flip();
-
-            System.out.println("Sending announcement on multicast address " + MULTICAST_GROUP);
-            sendChannel.send(buffer, new InetSocketAddress(MULTICAST_GROUP, ANNOUNCE_PORT));
+        try (final DatagramChannel receiveChannel = createReceiveChannel()) {
+            System.out.println("Waiting for server announcement...");
 
             boolean received = false;
+            ByteBuffer buffer = ByteBuffer.allocate(32);
 
-            System.out.println("Waiting for server reply...");
-
-            do {
+            while (!received) {
                 buffer.clear();
                 final SocketAddress sender = receiveChannel.receive(buffer);
                 buffer.flip();
 
                 String reply = new String(buffer.array(), Charset.forName("UTF-8"));
 
-                if (reply.startsWith("announcement-reply")) {
+                if (reply.startsWith("announcement")) {
                     server = ((InetSocketAddress) sender).getAddress();
                     System.out.println("Received server address: " + server);
                     received = true;
                 }
-            } while (!received);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -78,10 +70,6 @@ public class AutoDetectingServerConfig implements ServerConfig {
         channel.join(group, networkInterface);
 
         return channel;
-    }
-
-    private DatagramChannel createSendChannel() throws IOException {
-        return DatagramChannel.open(StandardProtocolFamily.INET);
     }
 
     private NetworkInterface getNetworkInterface(String nicName) {
