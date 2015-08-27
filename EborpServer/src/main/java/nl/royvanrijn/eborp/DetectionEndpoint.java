@@ -1,40 +1,65 @@
 package nl.royvanrijn.eborp;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 public class DetectionEndpoint implements DetectionListener {
 
     private static final Logger log = LoggerFactory.getLogger(DetectionEndpoint.class);
 
-
-    private ObjectMapper mapper;
-    private List<EborpSample> samples;
+    private ElasticsearchClient client;
     private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
 
 
     public DetectionEndpoint() {
-        mapper = new ObjectMapper();
-        samples = new ArrayList<>();
-
-        //executor.scheduleAtFixedRate(new EporbAnalysis(), 5, 5, TimeUnit.SECONDS);
+        client = new ElasticsearchClient();
+        executor.scheduleAtFixedRate(new EporbAnalysis(), 5, 5, TimeUnit.SECONDS);
     }
 
     class EporbAnalysis implements Runnable {
         @Override
         public void run() {
 
-            final long fiveMinutesAgo = System.currentTimeMillis() - (300 * 1000);
-            List<EborpSample> lastSamples = samples.stream().filter(s -> s.getEpoch() > fiveMinutesAgo).collect(Collectors.toList());
-            samples = lastSamples;
+            Map<String, List<EborpSample>> samples = client.getAll("1000d");
 
+
+            Map<String, Map<String, List<Integer>>> step3 = new HashMap<>();
+            Map<String, Map<String, Integer>> step4 = new HashMap<>();
+
+            for (Map.Entry<String, List<EborpSample>> listEntry : samples.entrySet()) {
+                String macAddress = listEntry.getKey();
+                List<EborpSample> value = listEntry.getValue();
+
+                Map<String, List<Integer>> macAssociatedValue = step3.put(macAddress, new HashMap<>());
+
+                for (EborpSample eborpSample : value) {
+                    String pie = eborpSample.getSource();
+                    if (!macAssociatedValue.containsKey(pie)) {
+                        macAssociatedValue.put(pie, new ArrayList<>());
+                    }
+                    macAssociatedValue.get(pie).add(eborpSample.getDbm());
+                }
+
+                Map<String, Integer> step4Intermediate = new HashMap<>();
+                for (Map.Entry<String, List<Integer>> stringListEntry : macAssociatedValue.entrySet()) {
+                    String pie = stringListEntry.getKey();
+                    List<Integer> signals = stringListEntry.getValue();
+                    Collections.sort(signals);
+                    // Calculate the average strength from the lowest half (skip the outliers)
+                    int total = 0;
+                    for (int i = signals.size() - (signals.size() / 2); i < signals.size(); i++) {
+                        total += signals.get(i);
+                    }
+                    step4Intermediate.put(pie, total);
+                }
+
+                step4.put(macAddress, step4Intermediate);
+            }
 
 
         }
@@ -45,8 +70,7 @@ public class DetectionEndpoint implements DetectionListener {
     public void onDetection(String data) throws IOException {
         log.info(data);
 
-        EborpSample eborpSample = mapper.readValue(data, EborpSample.class);
-        samples.add(eborpSample);
+        client.addSample(data);
 
         /**
          * TODO:
