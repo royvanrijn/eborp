@@ -1,9 +1,11 @@
 package nl.royvanrijn.eborp;
 
 import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.node.Node;
@@ -18,18 +20,24 @@ import java.util.stream.Collectors;
 public class ElasticsearchClient {
 
 	private final Client client;
-	private static final String INDEX_NAME = "eborp";
+	private static final String INDEX_NAME = "eborp2";
 	private static final String TYPE_NAME = "sample";
 
 	public ElasticsearchClient() {
-		Node node = NodeBuilder.nodeBuilder().clusterName("es_wifi").node();
+		ImmutableSettings.Builder builder = ImmutableSettings.builder();
+		builder.put("cluster.name", "es_wifi");
+		builder.put("node.data", "false");
+		builder.put("node.master", "false");
+		Node node = NodeBuilder.nodeBuilder().settings(builder.build()).node();
 		client = node.client();
 	}
 
 	public void addSample(String sampleAsJson) {
 		IndexRequestBuilder indexRequest = client.prepareIndex(INDEX_NAME, TYPE_NAME);
 		indexRequest.setSource(sampleAsJson);
-		indexRequest.execute().actionGet();
+		indexRequest.setRefresh(false);
+		IndexResponse response = indexRequest.execute().actionGet();
+		System.out.println(response);
 	}
 
 	public Map<String, List<EborpSample>> getAll(String timeRange) {

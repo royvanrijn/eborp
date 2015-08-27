@@ -12,14 +12,13 @@ public class ElasticsearchClientTest {
 
 //	@Test
 	public void go() throws Exception {
+		ElasticsearchClient client = new ElasticsearchClient();
 		List<String> lines = Files.readAllLines(Paths.get(new URI
 				("file:///Users/jeroen/Documents/jpoint/eborp/EborpServer/jsonInputExample")));
 
-		int i = 1;
 		for (String line : lines) {
-			System.out.println("{ \"index\" : { \"_index\" : \"eborp\", \"_type\" : \"sample\", \"_id\" : \"" + i + "\" } }");
-			System.out.println(line);
-			i++;
+			String json = line.replaceAll("dfb41b70", "\"dfb41b70").replaceAll("9a19ad49be8c", "9a19ad49be8c\"");
+			client.addSample(json);
 		}
 	}
 
