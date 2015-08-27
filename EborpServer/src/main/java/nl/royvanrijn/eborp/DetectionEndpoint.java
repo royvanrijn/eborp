@@ -1,5 +1,6 @@
 package nl.royvanrijn.eborp;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,15 +8,26 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 
 @Path("/detection")
 public class DetectionEndpoint {
     private static final Logger log = LoggerFactory.getLogger(DetectionEndpoint.class);
 
+
+    private ObjectMapper mapper;
+
+    public DetectionEndpoint() {
+        mapper = new ObjectMapper();
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public void onDetection(String data) {
+    public void onDetection(String data) throws IOException {
         log.info(data);
+
+        EborpSample eborpSample = mapper.readValue(data, EborpSample.class);
+
 
         /**
          * TODO:

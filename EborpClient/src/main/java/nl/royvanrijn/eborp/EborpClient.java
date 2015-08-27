@@ -11,14 +11,14 @@ import java.net.URL;
  * response
  */
 public class EborpClient {
-	
+
 	private IdReader idReader = new IdReader();
-	
+
 	public static void main(String[] args) throws Exception {
 		EborpClient client = new EborpClient();
 		client.start();
 	}
-	
+
 	private void start() throws Exception {
 
 		final BufferedReader inReader = new BufferedReader(
@@ -27,7 +27,7 @@ public class EborpClient {
             try {
                 String input = inReader.readLine();
                 String json = parseJson(input);
-                
+
                 if(json != null) {
                     post(json);
                 }
@@ -50,12 +50,12 @@ public class EborpClient {
 		    dBm = Integer.parseInt(values[2]);
 		}
 		long epochInMillis = (long)(Double.parseDouble(time) * 1000L);
-		
+
 		String json =
 				"{\"epoch\":" + epochInMillis
 				+ ",\"mac\":\""+ MAC +"\""
 				+ ",\"dbm\":"+ dBm
-				+ ",\"source\":"+ idReader.getId()
+				+ ",\"source\":\""+ idReader.getId()+"\""
 				+ "}";
 		return json;
 	}
