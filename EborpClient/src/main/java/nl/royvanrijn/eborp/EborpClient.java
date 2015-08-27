@@ -65,9 +65,6 @@ public class EborpClient {
 
 	private void post(String data) {
 		try {
-
-			System.out.println(properties.get(PropertiesReader.SERVER_ADDRESS));
-
 			URL restServiceURL = new URL(""+ properties.get(PropertiesReader.SERVER_ADDRESS));
 
 			HttpURLConnection httpConnection = (HttpURLConnection) restServiceURL.openConnection();
