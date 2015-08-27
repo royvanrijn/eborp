@@ -1,0 +1,12 @@
+To start using Eborp you'll need to do the following:
+
+For each Raspberry Pi, set it up using the provided image, this contains:
+	- airmon-ng (tool to enable wireless monitoring mode)
+	- TShark (command-line tool for packet sniffing)
+	- Eborp client (to connect to the server)
+	- Start/stop scripting
+
+For the server:
+1) Install Java and run EborpServer
+2) Set up some DNS (BIND?) for the Pi's to do a lookup?s
+	
