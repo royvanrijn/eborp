@@ -1,0 +1,3 @@
+curl -XDELETE 'http://localhost:9200/eborp/'
+
+curl -XPUT 'http://localhost:9200/eborp/' -d @mapping.json

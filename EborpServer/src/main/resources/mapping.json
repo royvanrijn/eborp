@@ -1,0 +1,25 @@
+{
+  "mappings": {
+    "sample": {
+      "properties": {
+        "dbm": {
+          "type": "long"
+        },
+        "epoch": {
+          "type": "date"
+        },
+        "mac": {
+          "index": "not_analyzed",
+          "type": "string"
+        },
+        "source": {
+          "index": "not_analyzed",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "settings": {
+    "number_of_shards": 1
+  }
+}
