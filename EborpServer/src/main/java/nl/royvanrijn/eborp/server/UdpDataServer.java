@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.Arrays;
 
 /**
  *
@@ -37,11 +38,20 @@ public class UdpDataServer extends Thread {
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);
 
-                String data = new String(packet.getData());
+                String data = new String(sanitize(packet.getData()));
                 detectionListener.onDetection(data);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private byte[] sanitize(byte[] data) {
+        int i = data.length - 1;
+        while (i >= 0 && data[i] == 0) {
+            --i;
+        }
+
+        return Arrays.copyOf(data, i + 1);
     }
 }
