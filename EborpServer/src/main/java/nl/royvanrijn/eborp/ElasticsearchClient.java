@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class ElasticsearchClient {
 
 	private final Client client;
-	private static final String INDEX_NAME = "eborp2";
+	private static final String INDEX_NAME = "eborp";
 	private static final String TYPE_NAME = "sample";
 
 	public ElasticsearchClient() {
