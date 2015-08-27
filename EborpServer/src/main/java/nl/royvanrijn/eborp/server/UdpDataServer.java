@@ -1,17 +1,22 @@
 package nl.royvanrijn.eborp.server;
 
 import nl.royvanrijn.eborp.DetectionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
-import java.util.Arrays;
+import java.net.InetSocketAddress;
+import java.net.StandardProtocolFamily;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+import java.nio.charset.Charset;
 
 /**
  *
  */
 public class UdpDataServer extends Thread {
+
+    private static final Logger LOG = LoggerFactory.getLogger(UdpDataServer.class);
 
     private static final int DATA_PORT = 7771;
 
@@ -23,35 +28,30 @@ public class UdpDataServer extends Thread {
 
     @Override
     public void run() {
-        System.out.println("Starting UDP data server");
+        LOG.info("Starting UDP data server");
 
-        DatagramSocket socket;
+        final DatagramChannel channel;
         try {
-            socket = new DatagramSocket(DATA_PORT);
-        } catch (SocketException e) {
+            channel = DatagramChannel.open(StandardProtocolFamily.INET);
+            channel.socket().bind(new InetSocketAddress(DATA_PORT));
+        } catch (IOException e) {
             throw new IllegalStateException("Unable to start UDP socket on port " + DATA_PORT, e);
         }
 
+        final ByteBuffer buffer = ByteBuffer.allocate(256);
+
         while (true) {
             try {
-                byte[] buf = new byte[256];
-                DatagramPacket packet = new DatagramPacket(buf, buf.length);
-                socket.receive(packet);
+                channel.receive(buffer);
+                buffer.flip();
 
-                String data = new String(sanitize(packet.getData()));
+                String data = new String(buffer.array(), Charset.forName("UTF-8"));
                 detectionListener.onDetection(data);
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                buffer.clear();
             }
         }
-    }
-
-    private byte[] sanitize(byte[] data) {
-        int i = data.length - 1;
-        while (i >= 0 && data[i] == 0) {
-            --i;
-        }
-
-        return Arrays.copyOf(data, i + 1);
     }
 }

@@ -13,7 +13,7 @@ import java.util.UUID;
 public class PropertiesReader {
 
 	public static final String SOURCE = "source";
-	public static final String SERVER_ADDRESS = "address";
+	public static final String NETWORK_INTERFACE = "nic";
 
 	private static final String FILENAME = "eborp.properties";
 
@@ -58,7 +58,7 @@ public class PropertiesReader {
 	private Properties initialFill() {
 		Properties properties = new Properties();
 		properties.put(SOURCE, UUID.randomUUID().toString());
-		properties.put(SERVER_ADDRESS, "http://192.168.0.199:7777/detection");
+		properties.put(NETWORK_INTERFACE, "en0");
 		write(properties);
 		return properties;
 	}

@@ -1,4 +1,4 @@
-package nl.royvanrijn.eborp.server;
+package nl.royvanrijn.eborp;
 
 import java.net.InetAddress;
 
