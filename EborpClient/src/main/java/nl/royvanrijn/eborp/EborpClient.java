@@ -1,10 +1,14 @@
 package nl.royvanrijn.eborp;
 
+import nl.royvanrijn.eborp.server.AutoDetectingServerConfig;
+import nl.royvanrijn.eborp.server.ServerConfig;
+
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.Properties;
 
 /**
@@ -13,7 +17,9 @@ import java.util.Properties;
  */
 public class EborpClient {
 
-	private Properties properties = new PropertiesReader().getProperties();
+    private final Properties properties;
+	private final ServerConfig serverConfig;
+	private final DatagramSocket socket;
 
 	public static void main(String[] args) throws Exception {
 		System.out.println("Starting Eborp Client.");
@@ -21,13 +27,30 @@ public class EborpClient {
 		client.start();
 	}
 
-	private void start() throws Exception {
+	public EborpClient() {
+		serverConfig = new AutoDetectingServerConfig();
+        properties = new PropertiesReader().getProperties();
 
-		final BufferedReader inReader = new BufferedReader(
-				new InputStreamReader(System.in));
+        try {
+            socket = new DatagramSocket();
+        } catch (SocketException e) {
+            throw new IllegalStateException("Unable to start UDP socket for sending ", e);
+        }
+    }
+
+	private void start() {
+
+		final BufferedReader inReader = new BufferedReader(new InputStreamReader(System.in));
+
 		while (true) {
-            try {
-                String input = inReader.readLine();
+			String input;
+			try {
+				input = inReader.readLine();
+			} catch (IOException e) {
+				throw new IllegalStateException("Unable to read input", e);
+			}
+
+			try {
                 String json = parseJson(input);
 
                 if(json != null) {
@@ -54,39 +77,21 @@ public class EborpClient {
 
 		long epochInMillis = (long)(Double.parseDouble(time) * 1000L);
 
-		String json =
-				"{\"epoch\":" + epochInMillis
-				+ ",\"mac\":\""+ MAC +"\""
-				+ ",\"dbm\":"+ dBm
-				+ ",\"source\":\""+ properties.get(PropertiesReader.SOURCE)+"\""
-				+ "}";
-		return json;
+        return "{\"epoch\":" + epochInMillis
+        + ",\"mac\":\""+ MAC +"\""
+        + ",\"dbm\":"+ dBm
+        + ",\"source\":\""+ properties.get(PropertiesReader.SOURCE)+"\""
+        + "}";
 	}
 
 	private void post(String data) {
 		try {
-			URL restServiceURL = new URL(""+ properties.get(PropertiesReader.SERVER_ADDRESS));
 
-			HttpURLConnection httpConnection = (HttpURLConnection) restServiceURL.openConnection();
-
-			httpConnection.setConnectTimeout(2); //Don' wait too long...
-
-			httpConnection.setDoOutput(true);
-			httpConnection.setRequestMethod("POST");
-		    httpConnection.setRequestProperty("Content-Type", "application/json");
-
-			OutputStream outputStream = httpConnection.getOutputStream();
-			outputStream.write(data.getBytes());
-			outputStream.flush();
-
-			int response = httpConnection.getResponseCode();
-			if(response < 200 || response >= 300) {
-				//Not good... what do we do now?
-			}
-			httpConnection.disconnect();
+			final byte[] bytes = data.getBytes();
+			socket.send(new DatagramPacket(bytes, bytes.length, serverConfig.getInetAddress(), serverConfig.getPort()));
 
 		} catch (Exception e) {
-			//Silently ignore more...
+            e.printStackTrace();
 		}
 	}
 }
