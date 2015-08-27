@@ -9,11 +9,8 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.SearchHit;
-import org.javatuples.Triplet;
 
-import java.time.Instant;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,16 +19,16 @@ public class ElasticsearchClient {
 
 	private final Client client;
 	private static final String INDEX_NAME = "eborp";
-	private static final String TYPE_NAME = "probe";
+	private static final String TYPE_NAME = "sample";
 
 	public ElasticsearchClient() {
 		Node node = NodeBuilder.nodeBuilder().clusterName("es_wifi").node();
 		client = node.client();
 	}
 
-	public void addProbe(String probeAsJson) {
+	public void addSample(String sampleAsJson) {
 		IndexRequestBuilder indexRequest = client.prepareIndex(INDEX_NAME, TYPE_NAME);
-		indexRequest.setSource(probeAsJson);
+		indexRequest.setSource(sampleAsJson);
 		indexRequest.execute().actionGet();
 	}
 

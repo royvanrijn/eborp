@@ -1,12 +1,10 @@
 package nl.royvanrijn.eborp;
 
-import org.javatuples.Triplet;
 import org.junit.Test;
 
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +17,7 @@ public class ElasticsearchClientTest {
 
 		int i = 1;
 		for (String line : lines) {
-			System.out.println("{ \"index\" : { \"_index\" : \"eborp\", \"_type\" : \"probe\", \"_id\" : \"" + i + "\" } }");
+			System.out.println("{ \"index\" : { \"_index\" : \"eborp\", \"_type\" : \"sample\", \"_id\" : \"" + i + "\" } }");
 			System.out.println(line);
 			i++;
 		}
