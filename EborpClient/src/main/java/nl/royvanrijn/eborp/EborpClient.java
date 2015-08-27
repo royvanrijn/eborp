@@ -46,7 +46,7 @@ public class EborpClient {
 		String time = values[0];
 		String MAC = values[1];
 		Integer dBm = null;
-		if(values.length == 3) {
+		if(values.length >= 3) {
 		    dBm = Integer.parseInt(values[2]);
 		}
 		long epochInMillis = (long)(Double.parseDouble(time) * 1000L);
