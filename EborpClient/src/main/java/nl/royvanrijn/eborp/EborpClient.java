@@ -68,6 +68,9 @@ public class EborpClient {
 			URL restServiceURL = new URL(""+ properties.get(PropertiesReader.SERVER_ADDRESS));
 
 			HttpURLConnection httpConnection = (HttpURLConnection) restServiceURL.openConnection();
+
+			httpConnection.setConnectTimeout(2); //Don' wait too long...
+
 			httpConnection.setDoOutput(true);
 			httpConnection.setRequestMethod("POST");
 		    httpConnection.setRequestProperty("Content-Type", "application/json");
@@ -84,7 +87,6 @@ public class EborpClient {
 
 		} catch (Exception e) {
 			//Silently ignore more...
-			System.out.println(e.getMessage());
 		}
 	}
 }
