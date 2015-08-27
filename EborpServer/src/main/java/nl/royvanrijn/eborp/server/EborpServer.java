@@ -12,7 +12,6 @@ public class EborpServer {
 	private void start() throws Exception {
 		startAnnouncementServer();
 		startDataServer();
-//		startJetty();
 	}
 
 	private void startAnnouncementServer() {
@@ -25,8 +24,4 @@ public class EborpServer {
 		server.start();
 	}
 
-	private void startJetty() throws Exception {
-		JettyDataServer server = new JettyDataServer();
-		server.start();
-	}
 }

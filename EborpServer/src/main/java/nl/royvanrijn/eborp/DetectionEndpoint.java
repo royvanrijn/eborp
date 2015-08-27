@@ -8,15 +8,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.MediaType;
 
-@Path("/detection")
 public class DetectionEndpoint implements DetectionListener {
+
     private static final Logger log = LoggerFactory.getLogger(DetectionEndpoint.class);
 
 
@@ -29,7 +24,7 @@ public class DetectionEndpoint implements DetectionListener {
         mapper = new ObjectMapper();
         samples = new ArrayList<>();
 
-        executor.scheduleAtFixedRate(new EporbAnalysis(), 5, 5, TimeUnit.SECONDS);
+        //executor.scheduleAtFixedRate(new EporbAnalysis(), 5, 5, TimeUnit.SECONDS);
     }
 
     class EporbAnalysis implements Runnable {
@@ -47,8 +42,6 @@ public class DetectionEndpoint implements DetectionListener {
 
 
     @Override
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
     public void onDetection(String data) throws IOException {
         log.info(data);
 
