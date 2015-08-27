@@ -1,8 +1,9 @@
 package nl.royvanrijn.eborp.matching;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
+import com.google.common.collect.ImmutableMap;
+
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -47,25 +48,27 @@ public class Matcher {
         // Example of the matching algorithm:
 
         // Given some (mock) capture-points, using 4 RPis:
+
         ReferenceCapture room1References = new ReferenceCapture("room 1", Arrays.asList(
-                new CaptureSet(-40, -55, -79, null),
-                new CaptureSet(-42, -51, -81, null),
-                new CaptureSet(-45, -66, null, -50),
-                new CaptureSet(-42, -52, -82, null)
+                new ImmutableMap.Builder<String, Integer>().put("rpi1", -40).put("rpi2", -55).put("rpi3", -79).build(),
+                new ImmutableMap.Builder<String, Integer>().put("rpi1", -42).put("rpi2", -51).put("rpi3", -81).build(),
+                new ImmutableMap.Builder<String, Integer>().put("rpi1", -45).put("rpi2", -66).put("rpi4", -50).build(),
+                new ImmutableMap.Builder<String, Integer>().put("rpi1", -42).put("rpi2", -52).put("rpi3", -82).build()
         ));
 
         ReferenceCapture room2References = new ReferenceCapture("room 2", Arrays.asList(
-                new CaptureSet(-60, -35, null, -79),
-                new CaptureSet(-62, -31, null, -81),
-                new CaptureSet(-65, -46, null, -50),
-                new CaptureSet(-62, -32, -82, null)
+                new ImmutableMap.Builder<String, Integer>().put("rpi1", -60).put("rpi2", -32).put("rpi4", -79).build(),
+                new ImmutableMap.Builder<String, Integer>().put("rpi1", -62).put("rpi2", -31).put("rpi4", -81).build(),
+                new ImmutableMap.Builder<String, Integer>().put("rpi1", -65).put("rpi2", -46).put("rpi4", -50).build(),
+                new ImmutableMap.Builder<String, Integer>().put("rpi1", -62).put("rpi2", -32).put("rpi3", -82).build()
         ));
 
         // Do this once we have altered the reference points
         PreMatchingStatistics preMatchingStatistics = createPreMatchingStatistics(room1References, room2References);
 
         // Given one 'measured' capture:
-        MacCapture macCapture = new MacCapture("macAddress", new CaptureSet(-53,-55,null, -77));
+
+        MacCapture macCapture = new MacCapture("macAddress", new ImmutableMap.Builder<String, Integer>().put("rpi1", -53).put("rpi2", -55).put("rpi4", -77).build());
 
         for(ReferenceCapture referenceCapture : new ReferenceCapture[] { room1References, room2References} ) {
             System.out.println("Best error of " + macCapture.getMacAddress() + " to " + referenceCapture.getLocationName() + " is " + calculateDistance(preMatchingStatistics, referenceCapture, macCapture));
@@ -77,25 +80,36 @@ public class Matcher {
     private PreMatchingStatistics createPreMatchingStatistics(ReferenceCapture... references) {
         int maxStrength = getStreamOfStrengths(references).max(Comparator.naturalOrder()).get();
         int minStrength = getStreamOfStrengths(references).min(Comparator.naturalOrder()).get();
-        return new PreMatchingStatistics(maxStrength, minStrength);
+        Set<String> allRpis = Arrays.stream(references)
+                .map(referenceCapture -> referenceCapture.getReferenceRpiStrengths())
+                .flatMap(Collection::stream)
+                .map(Map::keySet)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+        return new PreMatchingStatistics(maxStrength, minStrength, allRpis);
     }
 
     private Stream<Integer> getStreamOfStrengths(ReferenceCapture... references) {
         return Arrays.stream(references)
-                .map(referenceCapture -> referenceCapture.getReferenceCaptures())
+                .map(referenceCapture -> referenceCapture.getReferenceRpiStrengths())
                 .flatMap(Collection::stream)
-                .map(c -> c.getStrength())
-                .flatMap(Arrays::stream)
-                .filter(c -> c != null);
+                .map(Map::values)
+                .flatMap(Collection::stream);
     }
 
     private class PreMatchingStatistics {
         private int bestDBm;
         private int worstDBm;
+        private Set<String> allRpis;
 
-        private PreMatchingStatistics(int bestDBm, int worstDBm) {
+        private PreMatchingStatistics(int bestDBm, int worstDBm, Set<String> allRpis) {
             this.bestDBm = bestDBm;
             this.worstDBm = worstDBm;
+            this.allRpis = allRpis;
+        }
+
+        public Set<String> getAllRpis() {
+            return allRpis;
         }
 
         public int getBestDBm() {
@@ -120,33 +134,36 @@ public class Matcher {
 
         int lowestError = Integer.MAX_VALUE;
 
-        for(CaptureSet referenceCaptureSet : referenceCapture.getReferenceCaptures()) {
+        Map<String, Integer> macRpiStrengths = macCapture.getRpiStrengths();
+        for(Map<String, Integer> referenceRpiStrengths : referenceCapture.getReferenceRpiStrengths()) {
             int error = 0;
-
-            for(int rpi = 0; rpi < referenceCaptureSet.getStrength().length; rpi++) {
-                Integer s1 = macCapture.getCapture().getStrength()[rpi];
-                Integer s2 = referenceCaptureSet.getStrength()[rpi];
-
-                if(s1 == s2) {
-                    //Powers are null or exactly the same, no error!
-                } else if(s1 == null) {
-                    // s1 has no measurement but s2 does, give small penalty:
-                    error += Math.abs(preMatchingStatistics.getWorstDBm() - s2) * Math.abs(preMatchingStatistics.getWorstDBm() - s2);
-                } else if(s2 == null) {
-                    // s2 has no measurement but s1 does, give small penalty:
-                    error += Math.abs(preMatchingStatistics.getWorstDBm() - s1) * Math.abs(preMatchingStatistics.getWorstDBm() - s1);
-                } else {
-                    // subtract the absolute minimal measurement and add the squared error:
-                    s1 -= preMatchingStatistics.getBestDBm();
-                    s2 -= preMatchingStatistics.getBestDBm();
-                    error += Math.abs(s1 * s1 - s2 * s2);
-                }
+            for(String rpiSource : preMatchingStatistics.getAllRpis()) {
+                Integer refStrength = referenceRpiStrengths.get(rpiSource);
+                Integer macStrength = macRpiStrengths.get(rpiSource);
+                error += calculateErrorBetweenDBm(preMatchingStatistics, refStrength, macStrength);
             }
-
             lowestError = Math.min(lowestError, error);
         }
 
         return lowestError;
+    }
+
+    private int calculateErrorBetweenDBm(PreMatchingStatistics preMatchingStatistics, Integer s1, Integer s2) {
+        if(s1 == null && s2 == null) {
+            //Powers are null or exactly the same, no error!
+            return 0;
+        } else if(s1 == null) {
+            // s1 has no measurement but s2 does, give small penalty:
+            return Math.abs(preMatchingStatistics.getWorstDBm() - s2) * Math.abs(preMatchingStatistics.getWorstDBm() - s2);
+        } else if(s2 == null) {
+            // s2 has no measurement but s1 does, give small penalty:
+            return Math.abs(preMatchingStatistics.getWorstDBm() - s1) * Math.abs(preMatchingStatistics.getWorstDBm() - s1);
+        } else {
+            // subtract the absolute minimal measurement and add the squared error:
+            s1 -= preMatchingStatistics.getBestDBm();
+            s2 -= preMatchingStatistics.getBestDBm();
+            return Math.abs(s1 * s1 - s2 * s2);
+        }
     }
 
 }
