@@ -17,34 +17,6 @@ public class Matcher {
 
     private void run() {
 
-        /**
-         * Collect (from db?) the records of the latest N seconds
-         *   Group by MAC address:
-         *     Determine the best RSSI strength for each RPi per MAC (for example: MAC1 - RPi1: -37,-38,-70,-37,-38,-39,-38 => -38)
-         *       (Remove outliers, use median?)
-         *     Match the series of best RPi RSSIs against the known Capture Points (CP)
-         *
-         * Test later: How about keeping track of movement? Best matches over time?
-         * Visualize the results, how?
-         * Maybe add position to RPis as well, triangulate between best three matches based on calculated error?
-         *
-         * Live processing, keep list of last 5 minutes, FIFO, every N seconds repeat the calculation, update last known position (dont jump!)
-         * Store the complete result to improve matching in the future (?)
-         */
-
-        int[] resultsForRpi1 = new int[] {-79,-38,-79,-37,-38,-39, -37,-39, -36, -40};
-        // Sort the results:
-        Arrays.sort(resultsForRpi1);
-        // Calculate the average strength from the lowest half (skip the outliers)
-        int total = 0;
-        for(int i = resultsForRpi1.length - (resultsForRpi1.length / 2); i < resultsForRpi1.length; i++) {
-            total += resultsForRpi1[i];
-        }
-        System.out.println(Arrays.toString(resultsForRpi1));
-        System.out.println("Median for strengths: "+(resultsForRpi1[resultsForRpi1.length/2]));
-        System.out.println("Avg of best strength: "+(total/(resultsForRpi1.length/2)));
-
-
         // Example of the matching algorithm:
 
         // Given some (mock) capture-points, using 4 RPis:
