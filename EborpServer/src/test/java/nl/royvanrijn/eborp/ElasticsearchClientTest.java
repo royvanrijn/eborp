@@ -29,7 +29,7 @@ public class ElasticsearchClientTest {
 	public void es() throws Exception {
 		ElasticsearchClient client = new ElasticsearchClient();
 
-		Map<String, List<Triplet<Integer, Instant, String>>> all = client.getAll("1d");
+		Map<String, List<EborpSample>> all = client.getAll("1000d");
 
 
 		System.out.println(all.size());

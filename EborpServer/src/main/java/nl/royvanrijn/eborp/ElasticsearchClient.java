@@ -12,10 +12,11 @@ import org.elasticsearch.search.SearchHit;
 import org.javatuples.Triplet;
 
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ElasticsearchClient {
 
@@ -34,7 +35,7 @@ public class ElasticsearchClient {
 		indexRequest.execute().actionGet();
 	}
 
-	public Map<String, List<Triplet<Integer, Instant, String>>> getAll(String timeRange) {
+	public Map<String, List<EborpSample>> getAll(String timeRange) {
 		//TODO datumrange toevoegen
 		SearchRequestBuilder search = client.prepareSearch(INDEX_NAME);
 
@@ -44,28 +45,23 @@ public class ElasticsearchClient {
 		SearchRequestBuilder srb = search.setQuery(rangeQuery);
 		srb.setSize(1000000);
 
-		SearchResponse response = srb.execute().actionGet();
+        final SearchResponse response = srb.execute().actionGet();
 
-		Map<String, List<Triplet<Integer, Instant, String>>> results = new HashMap<>();
+//        final Map<String, List<Triplet<Integer, Instant, String>>> results = new HashMap<>();
+//		System.out.println("response.getHits().hits() = " + response.getHits().hits().length);
 
-		for (SearchHit hit : response.getHits().hits()) {
+		return Arrays.asList(response.getHits().hits()).stream()
+				.map(SearchHit::getSource)
+				.map(this::mapToEborpSample)
+				.collect(Collectors.groupingBy(EborpSample::getMac));
+    }
 
-			Map<String, Object> map = hit.getSource();
+	private EborpSample mapToEborpSample(Map<String, Object> map) {
+		final String mac = (String) map.get("mac");
+		final Integer dbm = new Integer(map.get("dbm").toString());
+		final Long epoch = (Long) map.get("epoch");
+		final String source = (String) map.get("source");
 
-			String mac = (String) map.get("mac");
-			Integer dbm = new Integer(map.get("dbm").toString());
-			Long epoch = (Long) map.get("epoch");
-			String source = (String) map.get("source");
-
-			//TODO goede tijdzone
-			Triplet<Integer, Instant, String> r = new Triplet<>(dbm, Instant.ofEpochMilli(epoch), source);
-
-			if (!results.containsKey(mac)) {
-				results.put(mac, new ArrayList<>());
-			}
-			results.get(mac).add(r);
-		}
-
-		return results;
+		return new EborpSample(epoch, mac, dbm, source);
 	}
 }
