@@ -8,9 +8,9 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/var/log/eborp.log</file>
+        <file>/tmp/eborp.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/var/log/eborp-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>/tmp/eborp-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <append>true</append>
