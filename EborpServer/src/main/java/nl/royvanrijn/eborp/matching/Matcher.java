@@ -1,6 +1,9 @@
 package nl.royvanrijn.eborp.matching;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 
 public class Matcher {
@@ -10,8 +13,6 @@ public class Matcher {
     }
 
     private static final int CAPTURE_DEVICES = 4;
-    private static final int MIN = -35;
-    private static final int MAX = -90;
 
     private void run() {
 
@@ -46,23 +47,64 @@ public class Matcher {
         // Example of the matching algorithm:
 
         // Given some (mock) capture-points, using 4 RPis:
-        CapturePoint[] capturePoints = new CapturePoint[5];
-        capturePoints[0] = new CapturePoint(-40, -55, -79, null);
-        capturePoints[1] = new CapturePoint(null, -45, -59, -59);
-        capturePoints[2] = new CapturePoint(-53, null, -59, -37);
-        capturePoints[3] = new CapturePoint(-38, -75, -70, null);
-        capturePoints[4] = new CapturePoint(-53, -45, -75, -77);
+        ReferenceCapture room1References = new ReferenceCapture("room 1", Arrays.asList(
+                new CaptureSet(-40, -55, -79, null),
+                new CaptureSet(-42, -51, -81, null),
+                new CaptureSet(-45, -66, null, -50),
+                new CaptureSet(-42, -52, -82, null)
+        ));
 
-        // And one 'measured' capture:
-        CapturePoint measurement = new CapturePoint(-53,-55,null, -77);
+        ReferenceCapture room2References = new ReferenceCapture("room 2", Arrays.asList(
+                new CaptureSet(-60, -35, null, -79),
+                new CaptureSet(-62, -31, null, -81),
+                new CaptureSet(-65, -46, null, -50),
+                new CaptureSet(-62, -32, -82, null)
+        ));
 
-        // Calculate the distance between given and captured:
-        for(int i = 0; i<capturePoints.length;i++) {
-            //Compare the measured RPi values against the known capturePoints:
-            System.out.println("Score " + i + ": " + calculateDistance(capturePoints[i], measurement));
+        // Do this once we have altered the reference points
+        PreMatchingStatistics preMatchingStatistics = createPreMatchingStatistics(room1References, room2References);
+
+        // Given one 'measured' capture:
+        MacCapture macCapture = new MacCapture("macAddress", new CaptureSet(-53,-55,null, -77));
+
+        for(ReferenceCapture referenceCapture : new ReferenceCapture[] { room1References, room2References} ) {
+            System.out.println("Best error of " + macCapture.getMacAddress() + " to " + referenceCapture.getLocationName() + " is " + calculateDistance(preMatchingStatistics, referenceCapture, macCapture));
+            // TODO: If the lowest error to a room is below a certain threshold, we've got our match!
         }
 
-        // The best matching capturepoint is our match, in the above case: capturePoints[4]
+    }
+
+    private PreMatchingStatistics createPreMatchingStatistics(ReferenceCapture... references) {
+        int maxStrength = getStreamOfStrengths(references).max(Comparator.naturalOrder()).get();
+        int minStrength = getStreamOfStrengths(references).min(Comparator.naturalOrder()).get();
+        return new PreMatchingStatistics(maxStrength, minStrength);
+    }
+
+    private Stream<Integer> getStreamOfStrengths(ReferenceCapture... references) {
+        return Arrays.stream(references)
+                .map(referenceCapture -> referenceCapture.getReferenceCaptures())
+                .flatMap(Collection::stream)
+                .map(c -> c.getStrength())
+                .flatMap(Arrays::stream)
+                .filter(c -> c != null);
+    }
+
+    private class PreMatchingStatistics {
+        private int bestDBm;
+        private int worstDBm;
+
+        private PreMatchingStatistics(int bestDBm, int worstDBm) {
+            this.bestDBm = bestDBm;
+            this.worstDBm = worstDBm;
+        }
+
+        public int getBestDBm() {
+            return bestDBm;
+        }
+
+        public int getWorstDBm() {
+            return worstDBm;
+        }
     }
 
     /**
@@ -74,36 +116,37 @@ public class Matcher {
      * MIN: The best possible RSSI found up to now
      * MAX: The worst possible RSSI measured
      */
-    private int calculateDistance(CapturePoint r1, CapturePoint r2) {
+    private int calculateDistance(PreMatchingStatistics preMatchingStatistics, ReferenceCapture referenceCapture, MacCapture macCapture) {
 
-        int error = 0;
+        int lowestError = Integer.MAX_VALUE;
 
-        for(int rpi = 0; rpi < CAPTURE_DEVICES; rpi++) {
-            Integer s1 = r1.strength[rpi];
-            Integer s2 = r2.strength[rpi];
+        for(CaptureSet referenceCaptureSet : referenceCapture.getReferenceCaptures()) {
+            int error = 0;
 
-            if(s1 == s2) {
-                //Powers are null or exactly the same, no error!
-            } else if(s1 == null) {
-                // s1 has no measurement but s2 does, give small penalty:
-                error += Math.abs(MAX - s2) * Math.abs(MAX - s2);
-            } else if(s2 == null) {
-                // s2 has no measurement but s1 does, give small penalty:
-                error += Math.abs(MAX - s1) * Math.abs(MAX - s1);
-            } else {
-                // subtract the absolute minimal measurement and add the squared error:
-                s1 -= MIN;
-                s2 -= MIN;
-                error += Math.abs(s1 * s1 - s2 * s2);
+            for(int rpi = 0; rpi < referenceCaptureSet.getStrength().length; rpi++) {
+                Integer s1 = macCapture.getCapture().getStrength()[rpi];
+                Integer s2 = referenceCaptureSet.getStrength()[rpi];
+
+                if(s1 == s2) {
+                    //Powers are null or exactly the same, no error!
+                } else if(s1 == null) {
+                    // s1 has no measurement but s2 does, give small penalty:
+                    error += Math.abs(preMatchingStatistics.getWorstDBm() - s2) * Math.abs(preMatchingStatistics.getWorstDBm() - s2);
+                } else if(s2 == null) {
+                    // s2 has no measurement but s1 does, give small penalty:
+                    error += Math.abs(preMatchingStatistics.getWorstDBm() - s1) * Math.abs(preMatchingStatistics.getWorstDBm() - s1);
+                } else {
+                    // subtract the absolute minimal measurement and add the squared error:
+                    s1 -= preMatchingStatistics.getBestDBm();
+                    s2 -= preMatchingStatistics.getBestDBm();
+                    error += Math.abs(s1 * s1 - s2 * s2);
+                }
             }
+
+            lowestError = Math.min(lowestError, error);
         }
-        return error;
+
+        return lowestError;
     }
 
-    private class CapturePoint {
-        private final Integer[] strength;
-        public CapturePoint(Integer... strength) {
-            this.strength = strength;
-        }
-    }
 }
