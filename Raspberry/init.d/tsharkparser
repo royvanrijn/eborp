@@ -1,0 +1,21 @@
+#!/bin/bash
+# /etc/init.d/tsharkparser
+
+case "$1" in 
+    start)
+        echo "Starting tsharkparser"
+        /home/pi/setup.sh
+        cd /home/pi/
+        ./mon.sh | java TSharkParser > /dev/null
+        ;;
+    stop)
+        echo "Stopping tsharkparser"
+        killall java
+        ;;
+    *)
+        echo "Usage: /etc/init.d/tsharkparser start|stop"
+        exit 1
+        ;;
+esac
+
+exit 0

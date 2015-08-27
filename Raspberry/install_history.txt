@@ -1,0 +1,78 @@
+    1  sudo apt-get update
+    2  wget
+    3  wget http://www.google.com
+    4  ls
+    5  rm index.html 
+    6  sudo apt-get update
+    7  sudo apt-get upgrade
+    8  sudo apt-get install iw tshark airmon-ng
+    9  sudo apt-get install iw tshark
+   10  sudo apt-get install subversion
+   11  ls -ltr
+   12  cd /
+   13  ls
+   14  cd ¬ 
+   15  cd home/
+   16  cd pi/
+   17  ls
+   18  mkdir wifi
+   19  cd wifi
+   20  svn co http://trac.aircrack-ng.org/svn/trunk aircrack-ng
+   21  svn co http://svn.aircrack-ng.org/svn/trunk aircrack-ng
+   22  svn co http://svn.aircrack-ng.org/trunk aircrack-ng
+   23  dir
+   24  ls
+   25  cd aircrack-ng/
+   26  ls
+   27  make
+   28  sudo apt-get install libnl3
+   29  sudo apt-get install libnl1
+   30  make
+   31  ls
+   32  make clean
+   33  dir
+   34  ls -ltr
+   35  sudo make
+   36  sudo apt-get install libnl1
+   37  sudo apt-get install libn-3-dev
+   38  sudo apt-get install libn-3
+   39  sudo apt-get install libnl-3-dev
+   40  make
+   41  make all
+   42  sudo apt-get install libnl-3
+   43  sudo apt-get install libnl-3-200
+   44  sudo apt-get install libnl-dev
+   45  make
+   46  sudo apt-get install libssl-dev
+   47  make
+   48  sudo make install
+   49  sudo airodump-ng-oui-update 
+   50  iwconfig
+   51  sudo airmon-ng start wlan0
+   52  sudo apt-get install ethtool
+   53  sudo airmon-ng start wlan0
+   54  iw
+   55  iwconfig
+   56  tshark -i wlan0mon -I -f `broadcast'
+   57  tshark -i wlan0mon -I -f "broadcast" -R "wlan.fc.type == 0 && wlan.fc.subtype == 4" -T fields -e frame.time_epoch -e wlan.sa -e radiotap.dbm_antsignal
+   58  echo sudo tshark -i wlan0mon -I -f "broadcast" -R "wlan.fc.type == 0 && wlan.fc.subtype == 4" -T fields -e frame.time_epoch -e wlan.sa -e radiotap.dbm_antsignal > ~/mon.sh
+   59  ls
+   60  cd ..
+   61  ls
+   62  chmod +x mon.sh 
+   63  ./mon.sh 
+   64  vi mon.sh 
+   65  ./mon.sh 
+   66  vi mon.sh 
+   67  ./mon.sh 
+   68  sudo dpkg-reconfigure wireshark
+   69  gksu
+   70  exit
+   71  ls -ltr
+   72  ./setup
+   73  ./setup.sh
+   74  sudo ./mon.sh 
+   75  vi TSharkParser.java 
+   76  javac TSharkParser.java 
+   77  sudo ./mon.sh | java TSharkParser 
+   78  exit
