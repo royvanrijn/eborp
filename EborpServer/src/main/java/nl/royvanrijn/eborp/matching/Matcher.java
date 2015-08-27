@@ -35,24 +35,15 @@ public class Matcher {
                 new ImmutableMap.Builder<String, Integer>().put("rpi1", -62).put("rpi2", -32).put("rpi3", -82).build()
         ));
 
-        // Do this once we have altered the reference points
-        PreMatchingStatistics preMatchingStatistics = createPreMatchingStatistics(room1References, room2References);
-
-        // Given one 'measured' capture:
-
         MacCapture macCapture = new MacCapture("macAddress", new ImmutableMap.Builder<String, Integer>().put("rpi1", -53).put("rpi2", -55).put("rpi4", -77).build());
 
-        for(ReferenceCapture referenceCapture : new ReferenceCapture[] { room1References, room2References} ) {
-            System.out.println("Best error of " + macCapture.getMacAddress() + " to " + referenceCapture.getLocationName() + " is " + calculateDistance(preMatchingStatistics, referenceCapture, macCapture));
-            // TODO: If the lowest error to a room is below a certain threshold, we've got our match!
-        }
-
+        match(Arrays.asList(room1References, room2References), Arrays.asList(macCapture));
     }
 
-    private PreMatchingStatistics createPreMatchingStatistics(ReferenceCapture... references) {
+    private PreMatchingStatistics createPreMatchingStatistics(Collection<ReferenceCapture> references) {
         int maxStrength = getStreamOfStrengths(references).max(Comparator.naturalOrder()).get();
         int minStrength = getStreamOfStrengths(references).min(Comparator.naturalOrder()).get();
-        Set<String> allRpis = Arrays.stream(references)
+        Set<String> allRpis = references.stream()
                 .map(referenceCapture -> referenceCapture.getReferenceRpiStrengths())
                 .flatMap(Collection::stream)
                 .map(Map::keySet)
@@ -61,8 +52,8 @@ public class Matcher {
         return new PreMatchingStatistics(maxStrength, minStrength, allRpis);
     }
 
-    private Stream<Integer> getStreamOfStrengths(ReferenceCapture... references) {
-        return Arrays.stream(references)
+    private Stream<Integer> getStreamOfStrengths(Collection<ReferenceCapture> references) {
+        return references.stream()
                 .map(referenceCapture -> referenceCapture.getReferenceRpiStrengths())
                 .flatMap(Collection::stream)
                 .map(Map::values)
@@ -90,6 +81,23 @@ public class Matcher {
 
         public int getWorstDBm() {
             return worstDBm;
+        }
+    }
+
+    public void match(List<ReferenceCapture> referenceCaptures, List<MacCapture> macCaptures) {
+        PreMatchingStatistics preMatchingStatistics = createPreMatchingStatistics(referenceCaptures);
+
+        for(MacCapture macCapture : macCaptures) {
+            System.out.println("Processing: " + macCapture.getMacAddress());
+
+            int lowestError = Integer.MAX_VALUE;
+            for(ReferenceCapture referenceCapture : referenceCaptures) {
+                int errorToReference = calculateDistance(preMatchingStatistics, referenceCapture, macCapture);
+                System.out.println(" - " + referenceCapture.getLocationName() + " is " + errorToReference);
+                lowestError = Math.min(lowestError, errorToReference);
+            }
+
+            System.out.println("Total error: " + lowestError);
         }
     }
 
