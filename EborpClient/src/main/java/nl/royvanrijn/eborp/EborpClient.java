@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Properties;
 
 /**
  * The simple client, which sends a message to the echo server and waits for
@@ -12,7 +13,7 @@ import java.net.URL;
  */
 public class EborpClient {
 
-	private IdReader idReader = new IdReader();
+	private Properties properties = new PropertiesReader().getProperties();
 
 	public static void main(String[] args) throws Exception {
 		System.out.println("Starting Eborp Client.");
@@ -50,13 +51,14 @@ public class EborpClient {
 		if(values.length >= 3) {
 		    dBm = Integer.parseInt(values[2]);
 		}
+
 		long epochInMillis = (long)(Double.parseDouble(time) * 1000L);
 
 		String json =
 				"{\"epoch\":" + epochInMillis
 				+ ",\"mac\":\""+ MAC +"\""
 				+ ",\"dbm\":"+ dBm
-				+ ",\"source\":\""+ idReader.getId()+"\""
+				+ ",\"source\":\""+ properties.get(PropertiesReader.SOURCE)+"\""
 				+ "}";
 		return json;
 	}
@@ -64,7 +66,9 @@ public class EborpClient {
 	private void post(String data) {
 		try {
 
-			URL restServiceURL = new URL("http://127.0.0.1:7777/detection");
+			System.out.println(properties.get(PropertiesReader.SERVER_ADDRESS));
+
+			URL restServiceURL = new URL(""+ properties.get(PropertiesReader.SERVER_ADDRESS));
 
 			HttpURLConnection httpConnection = (HttpURLConnection) restServiceURL.openConnection();
 			httpConnection.setDoOutput(true);
