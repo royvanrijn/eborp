@@ -53,9 +53,9 @@ public class EborpClient {
 		
 		String json =
 				"{\"epoch\":" + epochInMillis
-				+ ",\"MAC\":\""+ MAC +"\""
-				+ ",\"dBm\":"+ dBm
-				+ ",\"ID\":"+ idReader.getId()
+				+ ",\"mac\":\""+ MAC +"\""
+				+ ",\"dbm\":"+ dBm
+				+ ",\"source\":"+ idReader.getId()
 				+ "}";
 		return json;
 	}
