@@ -9,6 +9,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Path("/detection")
 public class DetectionEndpoint {
@@ -16,10 +21,30 @@ public class DetectionEndpoint {
 
 
     private ObjectMapper mapper;
+    private List<EborpSample> samples;
+    private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+
 
     public DetectionEndpoint() {
         mapper = new ObjectMapper();
+        samples = new ArrayList<>();
+
+        executor.scheduleAtFixedRate(new EporbAnalysis(), 5, 5, TimeUnit.SECONDS);
     }
+
+    class EporbAnalysis implements Runnable {
+        @Override
+        public void run() {
+
+            final long fiveMinutesAgo = System.currentTimeMillis() - (300 * 1000);
+            List<EborpSample> lastSamples = samples.stream().filter(s -> s.getEpoch() > fiveMinutesAgo).collect(Collectors.toList());
+            samples = lastSamples;
+
+
+
+        }
+    }
+
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -27,7 +52,7 @@ public class DetectionEndpoint {
         log.info(data);
 
         EborpSample eborpSample = mapper.readValue(data, EborpSample.class);
-
+        samples.add(eborpSample);
 
         /**
          * TODO:
