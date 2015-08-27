@@ -5,6 +5,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.search.SearchHit;
@@ -19,6 +20,8 @@ import java.util.Map;
 public class ElasticsearchClient {
 
 	private final Client client;
+	private static final String INDEX_NAME = "eborp";
+	private static final String TYPE_NAME = "probe";
 
 	public ElasticsearchClient() {
 		Node node = NodeBuilder.nodeBuilder().clusterName("es_wifi").node();
@@ -26,16 +29,20 @@ public class ElasticsearchClient {
 	}
 
 	public void addProbe(String probeAsJson) {
-		IndexRequestBuilder indexRequest = client.prepareIndex("eborp", "probe");
+		IndexRequestBuilder indexRequest = client.prepareIndex(INDEX_NAME, TYPE_NAME);
 		indexRequest.setSource(probeAsJson);
 		indexRequest.execute().actionGet();
 	}
 
-	public Map<String, List<Triplet<Integer, Instant, String>>> getAll() {
+	public Map<String, List<Triplet<Integer, Instant, String>>> getAll(String timeRange) {
 		//TODO datumrange toevoegen
-		SearchRequestBuilder search = client.prepareSearch("eborp");
-		SearchRequestBuilder srb = search.setQuery(QueryBuilders.matchAllQuery());
-		srb.setSize(100000);
+		SearchRequestBuilder search = client.prepareSearch(INDEX_NAME);
+
+		RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery("epoch");
+		rangeQuery.from("now-" + timeRange);
+
+		SearchRequestBuilder srb = search.setQuery(rangeQuery);
+		srb.setSize(1000000);
 
 		SearchResponse response = srb.execute().actionGet();
 
