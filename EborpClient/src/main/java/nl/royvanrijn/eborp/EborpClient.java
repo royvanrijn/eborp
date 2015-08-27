@@ -15,6 +15,7 @@ public class EborpClient {
 	private IdReader idReader = new IdReader();
 
 	public static void main(String[] args) throws Exception {
+		System.out.println("Starting Eborp Client.");
 		EborpClient client = new EborpClient();
 		client.start();
 	}
