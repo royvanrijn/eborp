@@ -1,5 +1,6 @@
 package nl.royvanrijn.eborp;
 
+import nl.royvanrijn.eborp.matching.MacCapture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class DetectionEndpoint implements DetectionListener {
 
@@ -61,10 +63,10 @@ public class DetectionEndpoint implements DetectionListener {
                 step4.put(macAddress, step4Intermediate);
             }
 
+            List<MacCapture> captures = step4.entrySet().stream().map(e -> new MacCapture(e.getKey(), e.getValue())).collect(Collectors.toList());
 
         }
     }
-
 
     @Override
     public void onDetection(String data) throws IOException {
